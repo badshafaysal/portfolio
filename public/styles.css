@@ -1080,7 +1080,8 @@ html:not(.dark) .process-step .num { color: rgba(0, 0, 0, 0.04); }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; 
+  text-align: center;
   gap: 1.25rem;
   font-size: 0.8rem;
   color: var(--muted);
@@ -1375,7 +1376,8 @@ a.project-card:focus-visible {
 
 .footer-inner {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  text-align: center;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
@@ -1639,7 +1641,7 @@ section { padding: 4rem 1.25rem; }
 
 /* Footer spacing on small screens */
 .site-footer { padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
-@media (max-width: 639px) { .site-footer { padding-inline: 1.15rem; } .footer-inner { justify-content: space-between; } }
+@media (max-width: 639px) { .site-footer { padding-inline: 1.15rem; } .footer-inner { justify-content: center; text-align: center; } }
 @media (min-width: 900px) {
   .contact-grid { align-items: stretch; }
   .contact-aside { display: flex; }
