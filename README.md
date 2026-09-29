@@ -1,7 +1,11 @@
-# Badsha Faysal — Portfolio (v3.7.1 · Easy to update)
+# Badsha Faysal — Portfolio (v3.7.2 · Easy to update)
 
 Professional portfolio with a **simple admin panel**.  
 Add projects (text + photos) **without writing code**.
+
+**v3.7.2 — fixes the actual Cloudflare build failure**
+- `astro build` failed with `pickRelated is not defined` on the project pages. Astro compiles `getStaticPaths` into its own isolated module and doesn't carry along separate helper functions defined alongside it — that logic is now inlined directly inside `getStaticPaths`, which is the only place it's used
+- Confirmed clean by tracing every function called from `getStaticPaths` across all pages, and by matching this deployment's own build log
 
 **v3.7.1 — bug fixes (audit pass, no visible changes needed on your end)**
 - The WhatsApp and LinkedIn buttons in the Contact section were hardcoded and would not update if you changed the number/URL in Site settings — they now read from Site settings like the floating WhatsApp button does

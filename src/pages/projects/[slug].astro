@@ -5,27 +5,30 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { labelForCategory } from '../../lib/categories';
 
-function pickRelated(current: CollectionEntry<'projects'>, all: CollectionEntry<'projects'>[]) {
-  const others = all.filter((p) => p.slug !== current.slug);
-  const same = others.filter((p) => p.data.category.some((c) => current.data.category.includes(c)));
-  const rest = others.filter((p) => !same.includes(p));
-  return [...same, ...rest].slice(0, 3);
-}
-
 export async function getStaticPaths() {
   const projects = (await getCollection('projects'))
     .filter((p) => !p.data.draft)
     .sort((a, b) => a.data.order - b.data.order);
 
-  return projects.map((project, i) => ({
-    params: { slug: project.slug },
-    props: {
-      project,
-      prev: projects[i - 1] ?? null,
-      next: projects[i + 1] ?? null,
-      related: pickRelated(project, projects),
-    },
-  }));
+  return projects.map((project, i) => {
+    // Inlined on purpose: Astro builds getStaticPaths in its own isolated
+    // module and does not carry along separate top-level helper functions,
+    // so this cannot be pulled out into a standalone function.
+    const others = projects.filter((p) => p.slug !== project.slug);
+    const same = others.filter((p) => p.data.category.some((c) => project.data.category.includes(c)));
+    const rest = others.filter((p) => !same.includes(p));
+    const related = [...same, ...rest].slice(0, 3);
+
+    return {
+      params: { slug: project.slug },
+      props: {
+        project,
+        prev: projects[i - 1] ?? null,
+        next: projects[i + 1] ?? null,
+        related,
+      },
+    };
+  });
 }
 
 interface Props {
