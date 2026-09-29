@@ -1,6 +1,4 @@
 ---
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { PROJECT_SIZES } from '../lib/images';
 import { labelForCategory } from '../lib/categories';
 
@@ -42,20 +40,6 @@ function webpPath(src: string): string | null {
 }
 
 const webp = webpPath(image);
-
-// Use smaller generated variants (-480 / -800) when they exist on disk; otherwise fall back to the single webp.
-function srcsetFor(w: string | null): string | null {
-  if (!w) return null;
-  const base = w.replace(/\.webp$/i, '');
-  const parts: string[] = [];
-  for (const size of [480, 800]) {
-    const v = `${base}-${size}.webp`;
-    if (existsSync(join(process.cwd(), 'public', v))) parts.push(`${v} ${size}w`);
-  }
-  return parts.length ? parts.join(', ') : `${w} 800w`;
-}
-const srcset = srcsetFor(webp);
-const alt = [title, category.map(labelForCategory).join(' / '), location].filter(Boolean).join(' — ');
 ---
 
 <a
@@ -68,12 +52,12 @@ const alt = [title, category.map(labelForCategory).join(' / '), location].filter
   <div class="img-wrap">
     {featured && <span class="badge-featured">★ Featured</span>}
     <picture>
-      {srcset && (
-        <source type="image/webp" srcset={srcset} sizes={PROJECT_SIZES} />
+      {webp && (
+        <source type="image/webp" srcset={`${webp} 800w`} sizes={PROJECT_SIZES} />
       )}
       <img
         src={image}
-        alt={alt}
+        alt={title}
         width="800"
         height="600"
         loading={priority ? 'eager' : 'lazy'}

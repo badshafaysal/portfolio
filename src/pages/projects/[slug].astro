@@ -1,16 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { labelForCategory } from '../../lib/categories';
-
-function pickRelated(current: CollectionEntry<'projects'>, all: CollectionEntry<'projects'>[]) {
-  const others = all.filter((p) => p.slug !== current.slug);
-  const same = others.filter((p) => p.data.category.some((c) => current.data.category.includes(c)));
-  const rest = others.filter((p) => !same.includes(p));
-  return [...same, ...rest].slice(0, 3);
-}
 
 export async function getStaticPaths() {
   const projects = (await getCollection('projects'))
@@ -23,7 +14,6 @@ export async function getStaticPaths() {
       project,
       prev: projects[i - 1] ?? null,
       next: projects[i + 1] ?? null,
-      related: pickRelated(project, projects),
     },
   }));
 }
@@ -32,14 +22,11 @@ interface Props {
   project: CollectionEntry<'projects'>;
   prev: CollectionEntry<'projects'> | null;
   next: CollectionEntry<'projects'> | null;
-  related: CollectionEntry<'projects'>[];
 }
 
-const { project, prev, next, related } = Astro.props;
-const {
-  title, description, summary, category, tags, image, gallery, location, client, year, scope,
-  role, software, deliverables, size, duration, challenge, solution, result, sample, links,
-} = project.data;
+const { project, prev, next } = Astro.props;
+const { title, description, summary, category, tags, image, gallery, location, client, year, scope } =
+  project.data;
 const { Content } = await project.render();
 
 const allImages = [image, ...(gallery || []).filter((g) => g && g !== image)];
@@ -48,34 +35,6 @@ const pagePath = `/projects/${project.slug}/`;
 const shareUrl = `${siteUrl}${pagePath}`;
 const shareText = encodeURIComponent(`${title} — Badsha Faysal`);
 const shareEncoded = encodeURIComponent(shareUrl);
-const quoteHref = `/?project=${encodeURIComponent(title)}#contact`;
-const extraFacts = [
-  ['Role', role], ['Software', software], ['Deliverables', deliverables], ['Size', size], ['Duration', duration],
-].filter(([, v]) => v) as [string, string][];
-const storyBlocks = [
-  ['Challenge', challenge], ['Solution', solution], ['Result', result],
-].filter(([, v]) => v) as [string, string][];
-const absUrl = (u: string) => (u.startsWith('http') ? u : `${siteUrl}${u}`);
-const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'CreativeWork',
-    name: title,
-    description: summary || description,
-    url: shareUrl,
-    image: allImages.map(absUrl),
-    author: { '@type': 'Person', name: 'Badsha Faysal' },
-    locationCreated: location ? { '@type': 'Place', name: location } : undefined,
-  },
-];
-const imgAlt = [title, category.map(labelForCategory).join(' / '), location].filter(Boolean).join(' — ');
-
-function relatedSrcset(src: string): string {
-  const w = webpPath(src);
-  if (!w) return src;
-  const v = w.replace(/\.webp$/i, '-480.webp');
-  return existsSync(join(process.cwd(), 'public', v)) ? `${v} 480w` : w;
-}
 
 function webpPath(src: string): string | null {
   if (!src || src.startsWith('http')) return null;
@@ -91,7 +50,6 @@ function webpPath(src: string): string | null {
   ogImage={image}
   canonical={pagePath}
   ogType="article"
-  jsonLd={jsonLd}
 >
   <header class="nav" id="nav">
     <div class="nav-inner">
@@ -105,6 +63,7 @@ function webpPath(src: string): string | null {
         </div>
         <div class="logo-text">
           <strong>Badsha Faysal</strong>
+          <span class="sub-long">Senior Structural Detailer</span><span class="sub-short">Sr. Structural Detailer</span>
         </div>
       </a>
 
@@ -113,8 +72,7 @@ function webpPath(src: string): string | null {
         <a href="/#projects" class="active">Projects</a>
         <a href="/#process">Workflow</a>
         <a href="/#about">About</a>
-        <a href="/#contact">Contact</a>
-      </nav>
+        </nav>
 
       <div class="nav-actions">
         <a href="/resume.pdf" class="icon-btn nav-cv" download aria-label="Download CV" title="Download CV">
@@ -160,15 +118,9 @@ function webpPath(src: string): string | null {
     </a>
   </aside>
 
-  <main id="main" class="project-page">
+  <main class="project-page">
     <div class="section-inner project-page-inner">
-      <div class="project-topbar">
-        <a href="/#projects" class="back-link" id="back-link">← All projects</a>
-        <button type="button" class="share-open" id="share-open" aria-haspopup="dialog" aria-controls="share-dialog">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-          Share
-        </button>
-      </div>
+      <a href="/#projects" class="back-link">← All projects</a>
 
       <header class="project-header reveal">
         <p class="section-label">{(tags || category.map(labelForCategory).join(' · '))}</p>
@@ -203,14 +155,15 @@ function webpPath(src: string): string | null {
               <span class="fact-value">{scope}</span>
             </div>
           )}
-          {extraFacts.map(([label, value]) => (
-            <div class="fact">
-              <span class="fact-label">{label}</span>
-              <span class="fact-value">{value}</span>
-            </div>
-          ))}
         </div>
 
+        <div class="share-row">
+          <span class="share-label">Share</span>
+          <a class="share-btn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareEncoded}`} target="_blank" rel="noopener" aria-label="Share on LinkedIn">LinkedIn</a>
+          <a class="share-btn" href={`https://wa.me/?text=${shareText}%20${shareEncoded}`} target="_blank" rel="noopener" aria-label="Share on WhatsApp">WhatsApp</a>
+          <a class="share-btn" href={`https://twitter.com/intent/tweet?url=${shareEncoded}&text=${shareText}`} target="_blank" rel="noopener" aria-label="Share on X">X</a>
+          <button type="button" class="share-btn" id="copy-link" data-url={shareUrl}>Copy link</button>
+        </div>
       </header>
 
       <!-- Gallery -->
@@ -220,11 +173,8 @@ function webpPath(src: string): string | null {
             {webpPath(allImages[0]) && (
               <source type="image/webp" srcset={webpPath(allImages[0])!} />
             )}
-            <img id="gallery-main-img" src={allImages[0]} alt={imgAlt} width="1200" height="800" decoding="async" />
+            <img id="gallery-main-img" src={allImages[0]} alt={title} width="1200" height="800" decoding="async" />
           </picture>
-          <button type="button" class="gallery-zoom" id="gallery-zoom" aria-label="View photo full screen" title="Full screen">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-          </button>
           {allImages.length > 1 && (
             <>
               <button type="button" class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous photo">‹</button>
@@ -250,17 +200,6 @@ function webpPath(src: string): string | null {
         )}
       </div>
 
-      {storyBlocks.length > 0 && (
-        <div class="story-grid reveal">
-          {storyBlocks.map(([label, text]) => (
-            <section class="story-card">
-              <h2>{label}</h2>
-              <p>{text}</p>
-            </section>
-          ))}
-        </div>
-      )}
-
       {project.body && project.body.trim() && (
         <article class="project-notes reveal">
           <h2>Project notes</h2>
@@ -268,52 +207,6 @@ function webpPath(src: string): string | null {
             <Content />
           </div>
         </article>
-      )}
-
-      {(links.length > 0 || sample) && (
-        <div class="project-links reveal">
-          <h2>Links &amp; files</h2>
-          <div class="link-row">
-            {links.map((l) => (
-              <a class="link-chip" href={l.url} target="_blank" rel="noopener noreferrer">
-                {l.label}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
-              </a>
-            ))}
-            {sample && (
-              <a class="link-chip" href={sample} target="_blank" rel="noopener" download>
-                Sample drawing sheet (PDF)
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
-      <aside class="quote-cta reveal">
-        <div>
-          <h2>Need something similar?</h2>
-          <p>Send the drawings or a short brief and I will come back with scope and next steps.</p>
-        </div>
-        <a class="btn btn-primary" href={quoteHref}>Get a quote</a>
-      </aside>
-
-      {related.length > 0 && (
-        <section class="related reveal" aria-labelledby="related-title">
-          <h2 id="related-title">More projects</h2>
-          <div class="related-grid">
-            {related.map((r) => (
-              <a class="related-card" href={`/projects/${r.slug}/`}>
-                <picture>
-                  <source type="image/webp" srcset={relatedSrcset(r.data.image)} sizes="(max-width: 639px) 100vw, 280px" />
-                  <img src={r.data.image} alt={r.data.title} width="480" height="300" loading="lazy" decoding="async" />
-                </picture>
-                <span class="related-title">{r.data.title}</span>
-                {r.data.location && <span class="related-loc">{r.data.location}</span>}
-              </a>
-            ))}
-          </div>
-        </section>
       )}
 
       <!-- Prev / Next -->
@@ -334,52 +227,6 @@ function webpPath(src: string): string | null {
     </div>
   </main>
 
-  <dialog class="share-dialog" id="share-dialog" aria-labelledby="share-title">
-    <div class="share-dialog-head">
-      <h2 id="share-title">Share this project</h2>
-      <button type="button" class="share-close" id="share-close" aria-label="Close">×</button>
-    </div>
-    <p class="share-project">{title}</p>
-    <div class="share-grid">
-      <button type="button" class="share-opt" id="share-native" hidden>
-        <span class="share-ico">↗</span>More apps…
-      </button>
-      <a class="share-opt" href={`https://wa.me/?text=${shareText}%20${shareEncoded}`} target="_blank" rel="noopener">
-        <span class="share-ico" style="background:#25d366">WA</span>WhatsApp
-      </a>
-      <a class="share-opt" href={`https://t.me/share/url?url=${shareEncoded}&text=${shareText}`} target="_blank" rel="noopener">
-        <span class="share-ico" style="background:#229ed9">TG</span>Telegram
-      </a>
-      <a class="share-opt" href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareEncoded}`} target="_blank" rel="noopener">
-        <span class="share-ico" style="background:#0a66c2">in</span>LinkedIn
-      </a>
-      <a class="share-opt" href={`https://www.facebook.com/sharer/sharer.php?u=${shareEncoded}`} target="_blank" rel="noopener">
-        <span class="share-ico" style="background:#1877f2">f</span>Facebook
-      </a>
-      <a class="share-opt" href={`https://twitter.com/intent/tweet?url=${shareEncoded}&text=${shareText}`} target="_blank" rel="noopener">
-        <span class="share-ico" style="background:#111">X</span>X
-      </a>
-      <a class="share-opt" href={`mailto:?subject=${shareText}&body=${shareText}%0A${shareEncoded}`}>
-        <span class="share-ico" style="background:#64748b">@</span>Email
-      </a>
-      <a class="share-opt" href={`sms:?&body=${shareText}%20${shareEncoded}`}>
-        <span class="share-ico" style="background:#34c759">✉</span>Message
-      </a>
-    </div>
-    <div class="share-copy">
-      <input type="text" id="share-url" readonly value={shareUrl} aria-label="Project link" />
-      <button type="button" id="copy-link" data-url={shareUrl}>Copy link</button>
-    </div>
-  </dialog>
-
-  <dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
-    <button type="button" class="lb-close" id="lb-close" aria-label="Close viewer">×</button>
-    {allImages.length > 1 && <button type="button" class="lb-nav lb-prev" id="lb-prev" aria-label="Previous photo">‹</button>}
-    <img id="lb-img" src={allImages[0]} alt={imgAlt} />
-    {allImages.length > 1 && <button type="button" class="lb-nav lb-next" id="lb-next" aria-label="Next photo">›</button>}
-    <p class="lb-count" id="lb-count" aria-live="polite"></p>
-  </dialog>
-
   <footer class="site-footer">
     <div class="section-inner footer-inner">
       <span>© {new Date().getFullYear()} Badsha Faysal · Senior Structural Detailer</span>
@@ -394,14 +241,12 @@ function webpPath(src: string): string | null {
     var mainPicture = mainImg && mainImg.closest('picture');
     var prevBtn = document.getElementById('gallery-prev');
     var nextBtn = document.getElementById('gallery-next');
-    if (!mainImg) return;
+    if (!mainImg || !thumbs.length) return;
 
     var index = 0;
-    var items = thumbs.length
-      ? Array.prototype.map.call(thumbs, function (t) {
-          return { src: t.getAttribute('data-src'), webp: t.getAttribute('data-webp') || '' };
-        })
-      : [{ src: mainImg.getAttribute('src'), webp: '' }];
+    var items = Array.prototype.map.call(thumbs, function (t) {
+      return { src: t.getAttribute('data-src'), webp: t.getAttribute('data-webp') || '' };
+    });
 
     function show(i) {
       index = (i + items.length) % items.length;
@@ -429,106 +274,18 @@ function webpPath(src: string): string | null {
     prevBtn && prevBtn.addEventListener('click', function () { show(index - 1); });
     nextBtn && nextBtn.addEventListener('click', function () { show(index + 1); });
 
-    /* ---- Lightbox: fullscreen viewer with arrows, swipe and keyboard ---- */
-    var lb = document.getElementById('lightbox');
-    var lbImg = document.getElementById('lb-img');
-    var lbCount = document.getElementById('lb-count');
-    var zoomBtn = document.getElementById('gallery-zoom');
-    var lbPrev = document.getElementById('lb-prev');
-    var lbNext = document.getElementById('lb-next');
-    var lbClose = document.getElementById('lb-close');
-
-    function lbShow(i) {
-      index = (i + items.length) % items.length;
-      lbImg.src = items[index].src;
-      if (lbCount) lbCount.textContent = items.length > 1 ? (index + 1) + ' / ' + items.length : '';
-    }
-    function lbOpen() {
-      if (!lb) return;
-      lbShow(index);
-      if (typeof lb.showModal === 'function') lb.showModal(); else lb.setAttribute('open', '');
-    }
-    function lbCloseFn() { if (lb.close) lb.close(); else lb.removeAttribute('open'); }
-    if (lb && zoomBtn) {
-      zoomBtn.addEventListener('click', lbOpen);
-      mainImg.addEventListener('click', lbOpen);
-      mainImg.style.cursor = 'zoom-in';
-      lbClose && lbClose.addEventListener('click', lbCloseFn);
-      lbPrev && lbPrev.addEventListener('click', function () { lbShow(index - 1); });
-      lbNext && lbNext.addEventListener('click', function () { lbShow(index + 1); });
-      lb.addEventListener('click', function (e) { if (e.target === lb) lbCloseFn(); });
-      lb.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') { e.preventDefault(); lbShow(index - 1); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); lbShow(index + 1); }
-      });
-      // keep the page gallery on the same photo when the viewer closes
-      lb.addEventListener('close', function () { show(index); zoomBtn.focus(); });
-      // swipe
-      var sx = null;
-      lb.addEventListener('touchstart', function (e) { sx = e.changedTouches[0].clientX; }, { passive: true });
-      lb.addEventListener('touchend', function (e) {
-        if (sx === null) return;
-        var dx = e.changedTouches[0].clientX - sx;
-        sx = null;
-        if (Math.abs(dx) > 40 && items.length > 1) lbShow(index + (dx < 0 ? 1 : -1));
-      }, { passive: true });
-    }
-
-    /* ---- Share dialog ---- */
-    var dlg = document.getElementById('share-dialog');
-    var openBtn = document.getElementById('share-open');
-    var closeBtn = document.getElementById('share-close');
     var copyBtn = document.getElementById('copy-link');
-    var urlInput = document.getElementById('share-url');
-    var nativeBtn = document.getElementById('share-native');
-    var shareUrl = copyBtn ? copyBtn.getAttribute('data-url') : location.href;
-    var shareTitle = document.querySelector('.project-title');
-    shareTitle = (shareTitle ? shareTitle.textContent : document.title) + ' — Badsha Faysal';
-
-    if (dlg && openBtn) {
-      openBtn.addEventListener('click', function () {
-        if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
-      });
-      function closeDlg() { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
-      closeBtn && closeBtn.addEventListener('click', closeDlg);
-      // click on backdrop closes
-      dlg.addEventListener('click', function (e) { if (e.target === dlg) closeDlg(); });
-      dlg.addEventListener('close', function () { openBtn.focus(); });
-      dlg.querySelectorAll('a.share-opt').forEach(function (a) {
-        a.addEventListener('click', function () { setTimeout(closeDlg, 150); });
-      });
-    }
-
-    // Native share sheet (phones / some desktops): reaches every installed app
-    if (nativeBtn && navigator.share) {
-      nativeBtn.hidden = false;
-      nativeBtn.addEventListener('click', function () {
-        navigator.share({ title: shareTitle, text: shareTitle, url: shareUrl }).catch(function () {});
-      });
-    }
-
-    function flashCopied() {
-      copyBtn.textContent = 'Copied ✓';
-      setTimeout(function () { copyBtn.textContent = 'Copy link'; }, 1600);
-    }
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
+        var url = copyBtn.getAttribute('data-url') || window.location.href;
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(shareUrl).then(flashCopied, function () {
-            urlInput && urlInput.select();
+          navigator.clipboard.writeText(url).then(function () {
+            copyBtn.textContent = 'Copied';
+            setTimeout(function () { copyBtn.textContent = 'Copy link'; }, 1500);
           });
-        } else if (urlInput) {
-          urlInput.select();
-          try { document.execCommand('copy'); flashCopied(); } catch (e) {}
+        } else {
+          window.prompt('Copy link', url);
         }
-      });
-    }
-
-    /* ---- "All projects": return to the exact spot the visitor left ---- */
-    var back = document.getElementById('back-link');
-    if (back) {
-      back.addEventListener('click', function () {
-        try { sessionStorage.setItem('pf:return', '1'); } catch (e) {}
       });
     }
   })();

@@ -4,14 +4,6 @@ import ProjectCard from '../components/ProjectCard.astro';
 import { getCollection } from 'astro:content';
 import { labelForCategory, usedCategories } from '../lib/categories';
 import testimonialData from '../data/testimonials.json';
-import siteData from '../data/site.json';
-import servicesData from '../data/services.json';
-import experienceData from '../data/experience.json';
-import educationData from '../data/education.json';
-import skillsData from '../data/skills.json';
-import clientsData from '../data/clients.json';
-import faqData from '../data/faq.json';
-import compareData from '../data/compare.json';
 
 const allProjects = (await getCollection('projects'))
   .filter((p) => !p.data.draft)
@@ -20,53 +12,11 @@ const allProjects = (await getCollection('projects'))
 const filterCategories = usedCategories(allProjects);
 const countFor = (key: string) => allProjects.filter((p) => p.data.category.includes(key as any)).length;
 const quotes = (testimonialData.items ?? []) as { quote: string; name: string; role?: string }[];
-
-const site = siteData as any;
-const yearsNum = Math.max(1, Math.floor((Date.now() - new Date(site.startYear || 2017, 5, 1).getTime()) / (365.25 * 24 * 3600 * 1000)));
-const years = site.yearsOverride || `${yearsNum}+`;
-
-// Section numbers follow what is actually shown
-let sectionCount = 3;
-const nextNum = () => String(++sectionCount).padStart(2, '0');
-const nTest = quotes.length ? nextNum() : '';
-const nFaq = nextNum();
-const nAbout = nextNum();
-const nContact = nextNum();
-
-const siteUrl = (Astro.site ?? new URL('https://badshafaysal.pages.dev')).origin;
-const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: 'Badsha Faysal',
-    jobTitle: 'Senior Structural Detailer',
-    url: siteUrl,
-    image: `${siteUrl}/images/profile.jpg`,
-    email: site.email ? `mailto:${site.email}` : undefined,
-    worksFor: { '@type': 'Organization', name: 'Newaz Steel Ltd.' },
-    address: { '@type': 'PostalAddress', addressLocality: 'Dhaka', addressCountry: 'BD' },
-    sameAs: [site.linkedin].filter(Boolean),
-    knowsAbout: ['Tekla Structures', 'AutoCAD', 'Steel fabrication detailing', 'Shop drawings', 'Bill of materials', 'Retrofitting'],
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'ProfessionalService',
-    name: 'Badsha Faysal — Structural Steel Detailing',
-    url: siteUrl,
-    image: `${siteUrl}/images/profile.jpg`,
-    areaServed: { '@type': 'Country', name: 'Bangladesh' },
-    address: { '@type': 'PostalAddress', addressLocality: 'Dhaka', addressCountry: 'BD' },
-    makesOffer: servicesData.items.map((sv) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: sv.title, description: sv.text } })),
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqData.items.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
-  },
-];
+const nAbout = quotes.length ? '05' : '04';
+const nContact = quotes.length ? '06' : '05';
 ---
 
-<Base jsonLd={jsonLd}>
+<Base>
   <!-- NAV -->
   <header class="nav" id="nav">
     <div class="nav-inner">
@@ -80,6 +30,7 @@ const jsonLd = [
         </div>
         <div class="logo-text">
           <strong>Badsha Faysal</strong>
+          <span class="sub-long">Senior Structural Detailer</span><span class="sub-short">Sr. Structural Detailer</span>
         </div>
       </a>
 
@@ -135,28 +86,23 @@ const jsonLd = [
     </a>
   </aside>
 
-  <main id="main">
   <!-- HERO -->
   <section id="home" class="hero">
     <div class="hero-grid">
       <div>
-        <div class="hero-badge">Senior Structural Detailer · Dhaka, Bangladesh</div>
+        <div class="hero-badge">Senior Structural Detailer · Dhaka</div>
         <h1>Fabrication-ready steel detailing that builds cleanly on site</h1>
         <p class="hero-lead">
           Tekla models, shop drawings, erection plans and BOMs for industrial, portal and multi-storey steel — coordinated, clear and ready for the shop floor.
         </p>
         <div class="hero-ctas">
           <a href="#contact" class="btn btn-primary">Request a Project Review</a>
-          <a href="/resume.pdf" class="btn btn-ghost" download>Download CV</a>
         </div>
         <div class="hero-meta">
-          <span><strong>{years}</strong> years</span>
+          <span><strong>8.5+</strong> years</span>
           <span><strong>Tekla</strong> + AutoCAD</span>
           <span><strong>100+</strong> sites</span>
         </div>
-        {site.availability?.show && (
-          <p class="availability"><span class="avail-dot" aria-hidden="true"></span>{site.availability.text}</p>
-        )}
       </div>
       <div class="hero-visual">
         <div class="video-wrap">
@@ -166,7 +112,7 @@ const jsonLd = [
             muted
             playsinline
             loop
-            preload="none"
+            preload="metadata"
           >
             <source src="/videos/portfolio-reel.mp4" type="video/mp4" />
           </video>
@@ -180,17 +126,6 @@ const jsonLd = [
     </div>
   </section>
 
-  {clientsData.show && clientsData.items.length > 0 && (
-    <section class="clients-strip" aria-label="Clients">
-      <div class="section-inner clients-inner">
-        <p class="clients-label">Worked with</p>
-        <ul class="clients-list">
-          {clientsData.items.map((c) => <li>{c}</li>)}
-        </ul>
-      </div>
-    </section>
-  )}
-
   <!-- SERVICES -->
   <section id="services">
     <div class="section-inner">
@@ -199,13 +134,36 @@ const jsonLd = [
         <h2 class="section-title">Clear scope. Fabrication-ready output.</h2>
       </div>
       <div class="services-grid">
-        {servicesData.items.map((sv, i) => (
-          <article class="service-card reveal" style={`transition-delay:${(i % 3) * 0.05}s`}>
-            <div class="service-num">{String(i + 1).padStart(2, '0')}</div>
-            <h3>{sv.title}</h3>
-            <p>{sv.text}</p>
-          </article>
-        ))}
+        <article class="service-card reveal">
+          <div class="service-num">01</div>
+          <h3>Tekla 3D Modelling</h3>
+          <p>Accurate structural models for industrial, portal and multi-storey steel with practical constructability in mind.</p>
+        </article>
+        <article class="service-card reveal" style="transition-delay:0.05s">
+          <div class="service-num">02</div>
+          <h3>Shop Drawings</h3>
+          <p>Fabrication drawings with clear marks, dimensions, welds and bolts so the shop can work without guesswork.</p>
+        </article>
+        <article class="service-card reveal" style="transition-delay:0.1s">
+          <div class="service-num">03</div>
+          <h3>Erection Plans</h3>
+          <p>Sequenced erection drawings and plans that help site teams place members safely and efficiently.</p>
+        </article>
+        <article class="service-card reveal" style="transition-delay:0.15s">
+          <div class="service-num">04</div>
+          <h3>BOM & Material Lists</h3>
+          <p>Reliable bills of materials and cutting lists aligned with the model and drawings.</p>
+        </article>
+        <article class="service-card reveal" style="transition-delay:0.2s">
+          <div class="service-num">05</div>
+          <h3>Model Coordination</h3>
+          <p>Clash-aware coordination and clear interfaces with other disciplines and existing structures.</p>
+        </article>
+        <article class="service-card reveal" style="transition-delay:0.25s">
+          <div class="service-num">06</div>
+          <h3>As-Built & Retrofitting</h3>
+          <p>Accurate as-built documentation and practical retrofitting designs for existing RCC and steel structures.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -282,20 +240,6 @@ const jsonLd = [
           <p>Clarifications and revisions handled so the shop and site can keep moving.</p>
         </div>
       </div>
-      {compareData.enabled && compareData.before && compareData.after && (
-        <div class="compare-wrap reveal">
-          <h3 class="compare-title">{compareData.title}</h3>
-          <div class="compare" id="compare" style="--pos:50%">
-            <img class="compare-img" src={compareData.after} alt={compareData.afterLabel} loading="lazy" decoding="async" />
-            <img class="compare-img compare-top" src={compareData.before} alt={compareData.beforeLabel} loading="lazy" decoding="async" />
-            <span class="compare-tag compare-tag-l">{compareData.beforeLabel}</span>
-            <span class="compare-tag compare-tag-r">{compareData.afterLabel}</span>
-            <span class="compare-handle" aria-hidden="true"></span>
-            <input class="compare-range" type="range" min="0" max="100" value="50" aria-label="Compare model and drawing" />
-          </div>
-          <p class="compare-cap">{compareData.caption}</p>
-        </div>
-      )}
     </div>
   </section>
 
@@ -303,7 +247,7 @@ const jsonLd = [
     <section id="testimonials">
       <div class="section-inner">
         <div class="reveal">
-          <p class="section-label">{nTest} / Client feedback</p>
+          <p class="section-label">04 / Client feedback</p>
           <h2 class="section-title">What clients say</h2>
         </div>
         <div class="testimonial-grid">
@@ -317,24 +261,6 @@ const jsonLd = [
       </div>
     </section>
   )}
-
-  <!-- FAQ -->
-  <section id="faq">
-    <div class="section-inner faq-inner">
-      <div class="reveal">
-        <p class="section-label">{nFaq} / FAQ</p>
-        <h2 class="section-title">Common questions</h2>
-      </div>
-      <div class="faq-list reveal">
-        {faqData.items.map((f) => (
-          <details class="faq-item">
-            <summary>{f.q}</summary>
-            <p>{f.a}</p>
-          </details>
-        ))}
-      </div>
-    </div>
-  </section>
 
   <!-- ABOUT -->
   <section id="about">
@@ -357,7 +283,7 @@ const jsonLd = [
         <h2 class="section-title about-name">Badsha Faysal</h2>
         <p class="about-role">Senior Structural Detailer · Newaz Steel Ltd</p>
         <p class="about-text">
-          I’m a structural steel detailer based in Dhaka, Bangladesh with {years} years across fabrication detailing, as-built &amp; retrofitting drawings, and on-site construction quality control.
+          I’m a structural steel detailer based in Dhaka with 8.5+ years across fabrication detailing, as-built &amp; retrofitting drawings, and on-site construction quality control.
         </p>
         <p class="about-text">
           Working on both the drawing board and the site shapes my approach: models are built to be fabricated, and drawings are written so the shop and erection crews don’t have to guess — using Tekla Structures and AutoCAD.
@@ -370,51 +296,8 @@ const jsonLd = [
         </ul>
         <div class="meta-list">
           <div><span class="label">Education</span><span>B.Sc. Civil Engineering · Diploma in Civil</span></div>
-          <div><span class="label">Clients</span><span>{clientsData.items.join(' · ')}</span></div>
+          <div><span class="label">Clients</span><span>NRG Spinning Mills · AG Ceramics · Sheltech Ceramics · Paragon Group</span></div>
         </div>
-      </div>
-    </div>
-
-    <div class="section-inner about-more">
-      <div class="about-col about-exp reveal">
-        <h3 class="about-h">Experience</h3>
-        <ol class="timeline">
-          {experienceData.items.map((j) => (
-            <li class="tl-item">
-              <div class="tl-head"><strong>{j.role}</strong><span class="tl-period">{j.period}</span></div>
-              <p class="tl-company">{j.company} · {j.location}</p>
-              <ul class="tl-points">
-                {j.points.map((pt) => <li>{pt}</li>)}
-              </ul>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div class="about-col reveal" style="transition-delay:0.08s">
-        <h3 class="about-h">Education</h3>
-        <ul class="edu-list">
-          {educationData.degrees.map((d) => (
-            <li><strong>{d.title}</strong><span>{d.school} · {d.year}</span>{d.note && <em>{d.note}</em>}</li>
-          ))}
-        </ul>
-        <h3 class="about-h">Training</h3>
-        <ul class="edu-list">
-          {educationData.training.map((t) => (
-            <li><strong>{t.title}</strong><span>{t.org} · {t.year}</span></li>
-          ))}
-        </ul>
-      </div>
-      <div class="about-col reveal" style="transition-delay:0.16s">
-        <h3 class="about-h">Skills</h3>
-        {skillsData.groups.map((g) => (
-          <div class="skill-group">
-            <p class="skill-name">{g.name}</p>
-            <ul class="skill-chips">
-              {g.items.map((it) => <li>{it}</li>)}
-            </ul>
-          </div>
-        ))}
-        {skillsData.languages && <p class="lang-line"><span class="skill-name">Languages</span> {skillsData.languages}</p>}
       </div>
     </div>
   </section>
@@ -429,7 +312,6 @@ const jsonLd = [
           Share a short brief or drawings. I’ll come back with scope clarity and next steps.
         </p>
         <p class="reply-note">Usually replies within a few hours · WhatsApp is fastest in Bangladesh</p>
-        {site.engagementNote && <p class="engagement-note">{site.engagementNote}</p>}
       </div>
       <div class="contact-grid">
         <form
@@ -450,41 +332,6 @@ const jsonLd = [
             <label for="email">Email</label>
             <input id="email" name="email" type="email" required placeholder="you@company.com" autocomplete="email" />
           </div>
-          <div class="form-grid">
-            <div class="form-row">
-              <label for="structure">Structure type</label>
-              <select id="structure" name="structure_type">
-                <option value="">Select…</option>
-                <option>Industrial shed / factory</option>
-                <option>Portal frame / PEB</option>
-                <option>Multi-storey steel</option>
-                <option>Mezzanine / stair / platform</option>
-                <option>Retrofitting / as-built</option>
-                <option>ETP / WTP structure</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label for="location">Project location</label>
-              <input id="location" name="project_location" type="text" placeholder="e.g. Gazipur" autocomplete="off" />
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="form-row">
-              <label for="timeline">Timeline</label>
-              <select id="timeline" name="timeline">
-                <option value="">Select…</option>
-                <option>As soon as possible</option>
-                <option>Within 1 month</option>
-                <option>1–3 months</option>
-                <option>Just exploring</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label for="drawings">Link to drawings (optional)</label>
-              <input id="drawings" name="drawings_link" type="url" placeholder="Google Drive, Dropbox…" autocomplete="off" />
-            </div>
-          </div>
           <div class="form-row">
             <label for="message">Project notes</label>
             <textarea id="message" name="message" rows="5" required placeholder="Type of structure, location, timeline, link to drawings if any…"></textarea>
@@ -501,19 +348,20 @@ const jsonLd = [
         </form>
 
         <div class="contact-aside reveal" style="transition-delay:0.1s">
-          <div class="map-wrap" id="map-wrap" data-src="https://maps.google.com/maps?q=Mirpur%2C%20Dhaka%2C%20Bangladesh&z=13&output=embed" data-title={site.publicLocation}>
-            <button type="button" class="map-load" id="map-load">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-              <span>Show map</span>
-            </button>
-            <p class="map-caption">{site.publicLocation}</p>
+          <div class="map-wrap">
+            <iframe
+              title="Shewrapara, Mirpur, Dhaka"
+              src="https://maps.google.com/maps?q=Shewrapara%2C%20Mirpur%2C%20Dhaka-1216%2C%20Bangladesh&z=15&output=embed"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
+            <p class="map-caption">Shewrapara, Mirpur, Dhaka-1216</p>
           </div>
         </div>
       </div>
     </div>
   </section>
-
-  </main>
 
   <footer class="site-footer">
     <div class="section-inner footer-inner">

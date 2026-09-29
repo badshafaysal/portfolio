@@ -1,9 +1,0 @@
-{
-  "enabled": false,
-  "title": "From model to shop drawing",
-  "caption": "Drag the handle to compare the Tekla model with the issued drawing.",
-  "before": "",
-  "beforeLabel": "Tekla model",
-  "after": "",
-  "afterLabel": "Shop drawing"
-}

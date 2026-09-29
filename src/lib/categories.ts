@@ -3,10 +3,9 @@ export const CATEGORY_LABELS: Record<string, string> = {
   industrial: 'Industrial',
   portal: 'Portal / PEB',
   multistorey: 'Multi-storey',
-  retrofit: 'Retrofitting / As-Built',
 };
 
-export const CATEGORY_ORDER = ['industrial', 'portal', 'multistorey', 'retrofit'] as const;
+export const CATEGORY_ORDER = ['industrial', 'portal', 'multistorey'] as const;
 
 export function labelForCategory(key: string): string {
   return CATEGORY_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
