@@ -1,9 +1,10 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// Change `site` to your real domain (custom domain or *.pages.dev URL).
+// Custom domain: set SITE_URL in Cloudflare Pages (Settings → Environment variables)
+// or edit the fallback below. robots.txt, sitemap and meta tags all follow this value.
 export default defineConfig({
-  site: 'https://badshafaysal.pages.dev',
+  site: process.env.SITE_URL || 'https://badshafaysal.pages.dev',
   output: 'static',
   integrations: [sitemap()],
   build: {

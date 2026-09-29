@@ -14,12 +14,16 @@
       - Cover image
       - Gallery photos (add as many as you want)
       - Location / Client / Year / Scope (optional facts)
+      - Role, software, deliverables, size, duration (optional facts)
+      - Challenge / Solution / Result (one or two sentences each)
+      - Links: previous or related work (label + full https:// link)
+      - Sample drawing sheet PDF (blur client names first)
       - Order number (1 = first)
       - Full notes (optional markdown)
 5. Publish
 6. Wait 1–2 minutes → refresh site
 
-Each project gets its own page with gallery, facts, prev/next, and share buttons.
+Each project gets its own page with gallery, facts, links, related projects, prev/next, a Share button and a Get-a-quote button.
 
 To edit or delete: Admin → click project → change or delete → Publish.
 
@@ -27,5 +31,5 @@ To edit or delete: Admin → click project → change or delete → Publish.
   OPTIONAL: faster photos
 ========================================
 
-  npm run optimize-images
+  npm run optimize-images   (also makes the small 480/800 px versions)
   git add public/images && git commit -m "Optimize images" && git push

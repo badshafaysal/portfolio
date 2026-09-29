@@ -76,7 +76,8 @@
   });
 
   /* ---------- Scroll: nav, back-top, active section ---------- */
-  const sections = ["home", "services", "projects", "process", "about", "contact"];
+  const sections = ["home", "services", "projects", "process", "faq", "about", "contact"];
+  const isHome = !!document.getElementById("projects"); // false on project pages
   const navLinks = document.querySelectorAll(".nav-links a, .mobile-drawer a[data-section]");
 
   function onScroll() {
@@ -84,7 +85,7 @@
     nav?.classList.toggle("scrolled", y > 24);
     backTop?.classList.toggle("visible", y > 300);
 
-    if (!navLinks.length) return;
+    if (!navLinks.length || !isHome) return; // project pages keep their static "Projects" highlight
     let current = "home";
     for (const id of sections) {
       const el = document.getElementById(id);
@@ -165,6 +166,51 @@
   });
   searchInput?.addEventListener("input", applyFilters);
 
+  /* ---------- Remember position when opening a project ---------- */
+  const grid = document.getElementById("projects-grid");
+  function saveState() {
+    try {
+      sessionStorage.setItem("pf:state", JSON.stringify({
+        y: window.scrollY,
+        filter: activeFilter,
+        q: searchInput?.value || "",
+      }));
+    } catch (e) {}
+  }
+  grid?.addEventListener("click", (e) => {
+    if (e.target.closest("a.project-card")) saveState();
+  });
+
+  // Coming back via "← All projects": restore filter, search and exact scroll spot
+  (function restoreState() {
+    if (!grid) return;
+    let st = null, back = false;
+    try {
+      back = sessionStorage.getItem("pf:return") === "1";
+      st = JSON.parse(sessionStorage.getItem("pf:state") || "null");
+      sessionStorage.removeItem("pf:return");
+    } catch (e) {}
+    if (!back || !st) return;
+
+    if (st.filter && st.filter !== "all") {
+      const btn = [...filterBtns].find((b) => b.dataset.filter === st.filter);
+      if (btn) {
+        filterBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeFilter = st.filter;
+      }
+    }
+    if (searchInput && st.q) searchInput.value = st.q;
+    applyFilters();
+    // reveal everything above/at the target so nothing is left invisible
+    cards.forEach((c) => c.classList.add("visible"));
+
+    const go = () => window.scrollTo({ top: st.y, behavior: "auto" });
+    go();
+    requestAnimationFrame(go);
+    window.addEventListener("load", go, { once: true });
+  })();
+
   /* ---------- Video ---------- */
   const video = document.getElementById("hero-video");
   const playBtn = document.getElementById("video-play");
@@ -200,7 +246,14 @@
     video.addEventListener("play", syncPlayUI);
     video.addEventListener("pause", syncPlayUI);
 
-    if ("IntersectionObserver" in window) {
+    // Only autoplay where it is welcome: not on phones, not with reduced motion or data saver
+    const conn = navigator.connection || {};
+    const canAutoplay =
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+      !window.matchMedia("(max-width: 767px)").matches &&
+      !conn.saveData;
+
+    if (canAutoplay && "IntersectionObserver" in window) {
       const videoObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -213,6 +266,49 @@
       );
       videoObserver.observe(video);
     }
+  }
+
+  /* ---------- Map: load only when asked ---------- */
+  const mapWrap = document.getElementById("map-wrap");
+  const mapLoad = document.getElementById("map-load");
+  mapLoad?.addEventListener("click", () => {
+    if (!mapWrap) return;
+    const iframe = document.createElement("iframe");
+    iframe.src = mapWrap.dataset.src || "";
+    iframe.title = "Map — " + (mapWrap.dataset.title || "Dhaka, Bangladesh");
+    iframe.loading = "lazy";
+    iframe.referrerPolicy = "no-referrer-when-downgrade";
+    iframe.setAttribute("allowfullscreen", "");
+    mapWrap.insertBefore(iframe, mapLoad);
+    mapLoad.remove();
+  });
+
+  /* ---------- "Get a quote" from a project page: prefill the form ---------- */
+  (function prefillFromProject() {
+    const params = new URLSearchParams(window.location.search);
+    const proj = (params.get("project") || "").trim().slice(0, 120);
+    if (!proj) return;
+    const msg = document.getElementById("message");
+    if (msg && !msg.value) msg.value = "I'm interested in a project similar to: " + proj + "\n\n";
+    const subject = document.querySelector('#contact-form input[name="subject"]');
+    if (subject) subject.value = "Project review request (similar to " + proj + ") — Badsha Portfolio";
+  })();
+
+  /* ---------- Before / after slider ---------- */
+  const compare = document.getElementById("compare");
+  const compareRange = compare?.querySelector(".compare-range");
+  compareRange?.addEventListener("input", () => {
+    compare.style.setProperty("--pos", compareRange.value + "%");
+  });
+
+  /* ---------- Mobile WhatsApp button: step aside on the contact section ---------- */
+  const waFab = document.getElementById("wa-fab");
+  const contactSection = document.getElementById("contact");
+  if (waFab && contactSection && "IntersectionObserver" in window) {
+    new IntersectionObserver(
+      (entries) => entries.forEach((e) => waFab.classList.toggle("is-hidden", e.isIntersecting)),
+      { threshold: 0.25 }
+    ).observe(contactSection);
   }
 
   /* ---------- Contact form (Web3Forms) ---------- */

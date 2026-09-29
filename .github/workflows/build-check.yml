@@ -1,0 +1,21 @@
+name: Build check
+
+# CI only — this repo is deployed by Cloudflare Pages (badshafaysal.pages.dev),
+# which builds and publishes on its own whenever this branch is pushed.
+# This workflow does NOT deploy anything. It only confirms `npm run build`
+# still succeeds, so a bad content edit is caught here instead of on Cloudflare.
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
