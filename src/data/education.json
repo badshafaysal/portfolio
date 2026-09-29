@@ -1,0 +1,33 @@
+{
+  "degrees": [
+    {
+      "title": "B.Sc. in Civil Engineering",
+      "school": "European University of Bangladesh",
+      "year": "2021",
+      "note": "CGPA 3.43 / 4.00"
+    },
+    {
+      "title": "Diploma in Engineering (Civil)",
+      "school": "Pabna Polytechnic Institute, Pabna",
+      "year": "2016",
+      "note": "CGPA 3.12 / 4.00"
+    }
+  ],
+  "training": [
+    {
+      "title": "Architectural & Structural Detailing (Drawing & Design)",
+      "org": "Sthapona Consultants, Khilkhet, Dhaka",
+      "year": "2016"
+    },
+    {
+      "title": "Diploma in AutoCAD",
+      "org": "CADD Training Centre, Gazipur, Dhaka",
+      "year": "2016"
+    },
+    {
+      "title": "Site Supervision & Project Management",
+      "org": "CADD Training Centre, Gazipur, Dhaka",
+      "year": "2016"
+    }
+  ]
+}

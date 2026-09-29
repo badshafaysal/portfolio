@@ -1,0 +1,523 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+import { labelForCategory, usedCategories } from '../lib/categories';
+import testimonialData from '../data/testimonials.json';
+import siteData from '../data/site.json';
+import servicesData from '../data/services.json';
+import experienceData from '../data/experience.json';
+import educationData from '../data/education.json';
+import skillsData from '../data/skills.json';
+import clientsData from '../data/clients.json';
+import faqData from '../data/faq.json';
+import compareData from '../data/compare.json';
+
+const allProjects = (await getCollection('projects'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const filterCategories = usedCategories(allProjects);
+const countFor = (key: string) => allProjects.filter((p) => p.data.category.includes(key as any)).length;
+const quotes = (testimonialData.items ?? []) as { quote: string; name: string; role?: string }[];
+
+const site = siteData as any;
+const yearsNum = Math.max(1, Math.floor((Date.now() - new Date(site.startYear || 2017, 5, 1).getTime()) / (365.25 * 24 * 3600 * 1000)));
+const years = site.yearsOverride || `${yearsNum}+`;
+
+// Section numbers follow what is actually shown
+let sectionCount = 3;
+const nextNum = () => String(++sectionCount).padStart(2, '0');
+const nTest = quotes.length ? nextNum() : '';
+const nFaq = nextNum();
+const nAbout = nextNum();
+const nContact = nextNum();
+
+const siteUrl = (Astro.site ?? new URL('https://badshafaysal.pages.dev')).origin;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Badsha Faysal',
+    jobTitle: 'Senior Structural Detailer',
+    url: siteUrl,
+    image: `${siteUrl}/images/profile.jpg`,
+    email: site.email ? `mailto:${site.email}` : undefined,
+    worksFor: { '@type': 'Organization', name: 'Newaz Steel Ltd.' },
+    address: { '@type': 'PostalAddress', addressLocality: 'Dhaka', addressCountry: 'BD' },
+    sameAs: [site.linkedin].filter(Boolean),
+    knowsAbout: ['Tekla Structures', 'AutoCAD', 'Steel fabrication detailing', 'Shop drawings', 'Bill of materials', 'Retrofitting'],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    name: 'Badsha Faysal — Structural Steel Detailing',
+    url: siteUrl,
+    image: `${siteUrl}/images/profile.jpg`,
+    areaServed: { '@type': 'Country', name: 'Bangladesh' },
+    address: { '@type': 'PostalAddress', addressLocality: 'Dhaka', addressCountry: 'BD' },
+    makesOffer: servicesData.items.map((sv) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: sv.title, description: sv.text } })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqData.items.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
+];
+---
+
+<Base jsonLd={jsonLd}>
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#home" class="logo">
+        <div class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+            <path d="M8 6v12M16 6v12"/>
+            <path d="M4 6l4-3h8l4 3"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <strong>Badsha Faysal</strong>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main">
+        <a href="#services" data-section="services">Services</a>
+        <a href="#projects" data-section="projects">Projects</a>
+        <a href="#process" data-section="process">Workflow</a>
+        <a href="#about" data-section="about">About</a>
+        <a href="#contact" data-section="contact">Contact</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="/resume.pdf" class="icon-btn nav-cv" download aria-label="Download CV" title="Download CV">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M4 20h16a1 1 0 001-1V8.5L14.5 3H5a1 1 0 00-1 1v15a1 1 0 001 1z"/></svg>
+        </a>
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark / light theme">
+          <svg class="icon-sun" style="display:none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg class="icon-moon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <button id="mobile-btn" class="icon-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-drawer">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-overlay" id="mobile-overlay" hidden></div>
+  <aside class="mobile-drawer" id="mobile-drawer" aria-label="Mobile navigation" hidden>
+    <a href="#services" data-section="services" class="drawer-link">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 6h16M4 12h10M4 18h14"/></svg>
+      Services
+    </a>
+    <a href="#projects" data-section="projects" class="drawer-link">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+      Projects
+    </a>
+    <a href="#process" data-section="process" class="drawer-link">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+      Workflow
+    </a>
+    <a href="#about" data-section="about" class="drawer-link">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      About
+    </a>
+    <a href="#contact" data-section="contact" class="drawer-link">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Contact
+    </a>
+    <hr class="drawer-sep" />
+    <a href="/resume.pdf" class="drawer-link" download>
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 10v6m0 0l-3-3m3 3l3-3M4 20h16a1 1 0 001-1V8.5L14.5 3H5a1 1 0 00-1 1v15a1 1 0 001 1z"/></svg>
+      Download CV
+    </a>
+  </aside>
+
+  <main id="main">
+  <!-- HERO -->
+  <section id="home" class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">Senior Structural Detailer · Dhaka, Bangladesh</div>
+        <h1>Fabrication-ready steel detailing that builds cleanly on site</h1>
+        <p class="hero-lead">
+          Tekla models, shop drawings, erection plans and BOMs for industrial, portal and multi-storey steel — coordinated, clear and ready for the shop floor.
+        </p>
+        <div class="hero-ctas">
+          <a href="#contact" class="btn btn-primary">Request a Project Review</a>
+          <a href="/resume.pdf" class="btn btn-ghost" download>Download CV</a>
+        </div>
+        <div class="hero-meta">
+          <span><strong>{years}</strong> years</span>
+          <span><strong>Tekla</strong> + AutoCAD</span>
+          <span><strong>100+</strong> sites</span>
+        </div>
+        {site.availability?.show && (
+          <p class="availability"><span class="avail-dot" aria-hidden="true"></span>{site.availability.text}</p>
+        )}
+      </div>
+      <div class="hero-visual">
+        <div class="video-wrap">
+          <video
+            id="hero-video"
+            poster="/images/project-04.jpg"
+            muted
+            playsinline
+            loop
+            preload="none"
+          >
+            <source src="/videos/portfolio-reel.mp4" type="video/mp4" />
+          </video>
+          <div class="video-controls">
+            <button type="button" class="video-btn" id="video-play" aria-label="Play">▶</button>
+            <button type="button" class="video-btn" id="video-mute" aria-label="Unmute">🔇</button>
+          </div>
+        </div>
+        <p class="video-caption">Selected detailing work — industrial, portal &amp; multi-storey steel</p>
+      </div>
+    </div>
+  </section>
+
+  {clientsData.show && clientsData.items.length > 0 && (
+    <section class="clients-strip" aria-label="Clients">
+      <div class="section-inner clients-inner">
+        <p class="clients-label">Worked with</p>
+        <ul class="clients-list">
+          {clientsData.items.map((c) => <li>{c}</li>)}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="section-inner">
+      <div class="reveal">
+        <p class="section-label">01 / Services</p>
+        <h2 class="section-title">Clear scope. Fabrication-ready output.</h2>
+      </div>
+      <div class="services-grid">
+        {servicesData.items.map((sv, i) => (
+          <article class="service-card reveal" style={`transition-delay:${(i % 3) * 0.05}s`}>
+            <div class="service-num">{String(i + 1).padStart(2, '0')}</div>
+            <h3>{sv.title}</h3>
+            <p>{sv.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-inner">
+      <div class="projects-header">
+        <div class="reveal">
+          <p class="section-label">02 / Projects</p>
+          <h2 class="section-title">Selected work</h2>
+        </div>
+      </div>
+      <div class="projects-tools reveal" style="transition-delay:0.1s">
+        <div class="filter-row" role="group" aria-label="Filter projects">
+          <button type="button" class="filter-btn active" data-filter="all">All <span class="count">{allProjects.length}</span></button>
+          {filterCategories.map((key) => (
+            <button type="button" class="filter-btn" data-filter={key}>
+              {labelForCategory(key)} <span class="count">{countFor(key)}</span>
+            </button>
+          ))}
+        </div>
+        <label class="project-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="project-search" type="search" placeholder="Search projects" aria-label="Search projects" autocomplete="off" />
+        </label>
+      </div>
+
+      <div class="projects-grid" id="projects-grid">
+        {allProjects.map((project, i) => (
+          <ProjectCard
+            title={project.data.title}
+            description={project.data.description}
+            category={project.data.category}
+            tags={project.data.tags}
+            image={project.data.image}
+            slug={project.slug}
+            location={project.data.location}
+            featured={project.data.featured}
+            index={i}
+          />
+        ))}
+      </div>
+      <p class="no-results" id="no-results" hidden>No projects match your search.</p>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div class="section-inner">
+      <div class="reveal">
+        <p class="section-label">03 / Workflow</p>
+        <h2 class="section-title">How a project runs, brief to fabrication</h2>
+      </div>
+      <div class="process-steps">
+        <div class="process-step reveal">
+          <span class="step-num">1</span>
+          <h3>Brief & inputs</h3>
+          <p>Architectural / structural drawings, design criteria and any existing models or site constraints.</p>
+        </div>
+        <div class="process-step reveal" style="transition-delay:0.08s">
+          <span class="step-num">2</span>
+          <h3>Model & coordinate</h3>
+          <p>Tekla model built with constructability and connection logic in mind; interfaces checked early.</p>
+        </div>
+        <div class="process-step reveal" style="transition-delay:0.16s">
+          <span class="step-num">3</span>
+          <h3>Drawings & BOM</h3>
+          <p>Shop drawings, erection plans and material lists issued for review and fabrication.</p>
+        </div>
+        <div class="process-step reveal" style="transition-delay:0.24s">
+          <span class="step-num">4</span>
+          <h3>Support through site</h3>
+          <p>Clarifications and revisions handled so the shop and site can keep moving.</p>
+        </div>
+      </div>
+      {compareData.enabled && compareData.before && compareData.after && (
+        <div class="compare-wrap reveal">
+          <h3 class="compare-title">{compareData.title}</h3>
+          <div class="compare" id="compare" style="--pos:50%">
+            <img class="compare-img" src={compareData.after} alt={compareData.afterLabel} loading="lazy" decoding="async" />
+            <img class="compare-img compare-top" src={compareData.before} alt={compareData.beforeLabel} loading="lazy" decoding="async" />
+            <span class="compare-tag compare-tag-l">{compareData.beforeLabel}</span>
+            <span class="compare-tag compare-tag-r">{compareData.afterLabel}</span>
+            <span class="compare-handle" aria-hidden="true"></span>
+            <input class="compare-range" type="range" min="0" max="100" value="50" aria-label="Compare model and drawing" />
+          </div>
+          <p class="compare-cap">{compareData.caption}</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  {quotes.length > 0 && (
+    <section id="testimonials">
+      <div class="section-inner">
+        <div class="reveal">
+          <p class="section-label">{nTest} / Client feedback</p>
+          <h2 class="section-title">What clients say</h2>
+        </div>
+        <div class="testimonial-grid">
+          {quotes.map((q) => (
+            <figure class="testimonial reveal">
+              <blockquote>{q.quote}</blockquote>
+              <figcaption><strong>{q.name}</strong>{q.role && <span>{q.role}</span>}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="section-inner faq-inner">
+      <div class="reveal">
+        <p class="section-label">{nFaq} / FAQ</p>
+        <h2 class="section-title">Common questions</h2>
+      </div>
+      <div class="faq-list reveal">
+        {faqData.items.map((f) => (
+          <details class="faq-item">
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-inner about-grid">
+      <div class="reveal about-photo">
+        <picture>
+          <source type="image/webp" srcset="/images/profile.webp" />
+          <img
+            src="/images/profile.jpg"
+            alt="Badsha Faysal"
+            width="320"
+            height="320"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
+      </div>
+      <div class="reveal" style="transition-delay:0.1s">
+        <p class="section-label">{nAbout} / About</p>
+        <h2 class="section-title about-name">Badsha Faysal</h2>
+        <p class="about-role">Senior Structural Detailer · Newaz Steel Ltd</p>
+        <p class="about-text">
+          I’m a structural steel detailer based in Dhaka, Bangladesh with {years} years across fabrication detailing, as-built &amp; retrofitting drawings, and on-site construction quality control.
+        </p>
+        <p class="about-text">
+          Working on both the drawing board and the site shapes my approach: models are built to be fabricated, and drawings are written so the shop and erection crews don’t have to guess — using Tekla Structures and AutoCAD.
+        </p>
+        <ul class="tool-chips" aria-label="Software">
+          <li class="tool-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 12h16M12 4v16"/></svg>Tekla Structures</li>
+          <li class="tool-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l3-1 12-12-2-2L4 18l-1 3z"/><path d="M14 6l2 2"/></svg>AutoCAD</li>
+          <li class="tool-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>SketchUp</li>
+          <li class="tool-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4h12v17M3 21h18"/><path d="M10 8h4M10 12h4M10 16h4"/></svg>ETABS</li>
+        </ul>
+        <div class="meta-list">
+          <div><span class="label">Education</span><span>B.Sc. Civil Engineering · Diploma in Civil</span></div>
+          <div><span class="label">Clients</span><span>{clientsData.items.join(' · ')}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-inner about-more">
+      <div class="about-col about-exp reveal">
+        <h3 class="about-h">Experience</h3>
+        <ol class="timeline">
+          {experienceData.items.map((j) => (
+            <li class="tl-item">
+              <div class="tl-head"><strong>{j.role}</strong><span class="tl-period">{j.period}</span></div>
+              <p class="tl-company">{j.company} · {j.location}</p>
+              <ul class="tl-points">
+                {j.points.map((pt) => <li>{pt}</li>)}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div class="about-col reveal" style="transition-delay:0.08s">
+        <h3 class="about-h">Education</h3>
+        <ul class="edu-list">
+          {educationData.degrees.map((d) => (
+            <li><strong>{d.title}</strong><span>{d.school} · {d.year}</span>{d.note && <em>{d.note}</em>}</li>
+          ))}
+        </ul>
+        <h3 class="about-h">Training</h3>
+        <ul class="edu-list">
+          {educationData.training.map((t) => (
+            <li><strong>{t.title}</strong><span>{t.org} · {t.year}</span></li>
+          ))}
+        </ul>
+      </div>
+      <div class="about-col reveal" style="transition-delay:0.16s">
+        <h3 class="about-h">Skills</h3>
+        {skillsData.groups.map((g) => (
+          <div class="skill-group">
+            <p class="skill-name">{g.name}</p>
+            <ul class="skill-chips">
+              {g.items.map((it) => <li>{it}</li>)}
+            </ul>
+          </div>
+        ))}
+        {skillsData.languages && <p class="lang-line"><span class="skill-name">Languages</span> {skillsData.languages}</p>}
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact-section">
+    <div class="section-inner">
+      <div class="reveal">
+        <p class="section-label">{nContact} / Contact</p>
+        <h2 class="section-title">Request a project review</h2>
+        <p class="contact-intro">
+          Share a short brief or drawings. I’ll come back with scope clarity and next steps.
+        </p>
+        <p class="reply-note">Usually replies within a few hours · WhatsApp is fastest in Bangladesh</p>
+        {site.engagementNote && <p class="engagement-note">{site.engagementNote}</p>}
+      </div>
+      <div class="contact-grid">
+        <form
+          class="contact-form reveal"
+          id="contact-form"
+          action="https://api.web3forms.com/submit"
+          method="POST"
+        >
+          <input type="hidden" name="access_key" value="4314f734-4ace-4308-b9c8-d671b32be832" />
+          <input type="hidden" name="subject" value="Project review request — Badsha Portfolio" />
+          <input type="hidden" name="from_name" value="Badsha Portfolio" />
+          <input type="checkbox" name="botcheck" class="hidden" style="display:none" tabindex="-1" autocomplete="off" />
+          <div class="form-row">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" required placeholder="Your name" autocomplete="name" />
+          </div>
+          <div class="form-row">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required placeholder="you@company.com" autocomplete="email" />
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="structure">Structure type</label>
+              <select id="structure" name="structure_type">
+                <option value="">Select…</option>
+                <option>Industrial shed / factory</option>
+                <option>Portal frame / PEB</option>
+                <option>Multi-storey steel</option>
+                <option>Mezzanine / stair / platform</option>
+                <option>Retrofitting / as-built</option>
+                <option>ETP / WTP structure</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="location">Project location</label>
+              <input id="location" name="project_location" type="text" placeholder="e.g. Gazipur" autocomplete="off" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="timeline">Timeline</label>
+              <select id="timeline" name="timeline">
+                <option value="">Select…</option>
+                <option>As soon as possible</option>
+                <option>Within 1 month</option>
+                <option>1–3 months</option>
+                <option>Just exploring</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="drawings">Link to drawings (optional)</label>
+              <input id="drawings" name="drawings_link" type="url" placeholder="Google Drive, Dropbox…" autocomplete="off" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="message">Project notes</label>
+            <textarea id="message" name="message" rows="5" required placeholder="Type of structure, location, timeline, link to drawings if any…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" id="form-submit">Send request</button>
+          <p class="form-status" id="form-status" hidden></p>
+          <div class="direct">
+            <p class="or-line"><span>or connect with me directly</span></p>
+            <div class="direct-icons">
+              <a class="direct-btn wa" href="https://wa.me/8801745459928?text=Hi%20Badsha%2C%20I%27d%20like%20to%20discuss%20a%20steel%20detailing%20project." target="_blank" rel="noopener" aria-label="Chat on WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+              <a class="direct-btn li" href="https://www.linkedin.com/in/b-faysal" target="_blank" rel="noopener" aria-label="LinkedIn profile" title="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+            </div>
+          </div>
+        </form>
+
+        <div class="contact-aside reveal" style="transition-delay:0.1s">
+          <div class="map-wrap" id="map-wrap" data-src="https://maps.google.com/maps?q=Mirpur%2C%20Dhaka%2C%20Bangladesh&z=13&output=embed" data-title={site.publicLocation}>
+            <button type="button" class="map-load" id="map-load">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+              <span>Show map</span>
+            </button>
+            <p class="map-caption">{site.publicLocation}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="section-inner footer-inner">
+      <span>© {new Date().getFullYear()} Badsha Faysal · Senior Structural Detailer</span>
+    </div>
+  </footer>
+</Base>

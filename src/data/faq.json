@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "q": "What do you need from me to start?",
+      "a": "Architectural or structural drawings, design criteria (governing code, loads if available), and any existing models or site constraints. A short brief is enough to get a quote."
+    },
+    {
+      "q": "How long does a project take?",
+      "a": "It depends on tonnage and complexity. After reviewing your drawings I confirm a schedule before work starts, so you know delivery dates up front."
+    },
+    {
+      "q": "What file formats do you deliver?",
+      "a": "PDF drawings and DWG/DXF by default. Tekla-based outputs such as IFC or NC files can be provided on request; tell me what your fabricator needs."
+    },
+    {
+      "q": "How are revisions handled?",
+      "a": "Clarifications and design changes are handled through the project, and the revision approach is agreed at the start so there are no surprises."
+    },
+    {
+      "q": "Which codes and standards do you work to?",
+      "a": "I follow the code specified for your project, local or international. Tell me the governing standard and I will detail to it."
+    },
+    {
+      "q": "Can you work on existing buildings?",
+      "a": "Yes. I prepare as-built drawings and retrofitting designs for existing RCC and steel structures, including site checks."
+    }
+  ]
+}

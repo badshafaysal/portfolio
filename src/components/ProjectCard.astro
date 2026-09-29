@@ -1,0 +1,94 @@
+---
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { PROJECT_SIZES } from '../lib/images';
+import { labelForCategory } from '../lib/categories';
+
+interface Props {
+  title: string;
+  description: string;
+  category: string[];
+  tags?: string;
+  image: string;
+  slug: string;
+  location?: string;
+  featured?: boolean;
+  index?: number;
+}
+
+const {
+  title,
+  description,
+  category,
+  tags,
+  image,
+  slug,
+  location,
+  featured = false,
+  index = 0,
+} = Astro.props;
+
+const categoryStr = category.join(' ');
+const searchText = [title, description, tags, location, ...category.map(labelForCategory)].filter(Boolean).join(' ').toLowerCase();
+const displayTags = tags || category.join(' · ');
+const delay = (index % 6) * 0.05;
+const priority = index < 3;
+
+function webpPath(src: string): string | null {
+  if (!src || src.startsWith('http') || src.startsWith('data:')) return null;
+  if (/\.jpe?g$/i.test(src)) return src.replace(/\.jpe?g$/i, '.webp');
+  if (/\.png$/i.test(src)) return src.replace(/\.png$/i, '.webp');
+  return null;
+}
+
+const webp = webpPath(image);
+
+// Use smaller generated variants (-480 / -800) when they exist on disk; otherwise fall back to the single webp.
+function srcsetFor(w: string | null): string | null {
+  if (!w) return null;
+  const base = w.replace(/\.webp$/i, '');
+  const parts: string[] = [];
+  for (const size of [480, 800]) {
+    const v = `${base}-${size}.webp`;
+    if (existsSync(join(process.cwd(), 'public', v))) parts.push(`${v} ${size}w`);
+  }
+  return parts.length ? parts.join(', ') : `${w} 800w`;
+}
+const srcset = srcsetFor(webp);
+const alt = [title, category.map(labelForCategory).join(' / '), location].filter(Boolean).join(' — ');
+---
+
+<a
+  href={`/projects/${slug}/`}
+  class="project-card reveal"
+  style={`transition-delay:${delay}s`}
+  data-category={categoryStr}
+  data-search={searchText}
+>
+  <div class="img-wrap">
+    {featured && <span class="badge-featured">★ Featured</span>}
+    <picture>
+      {srcset && (
+        <source type="image/webp" srcset={srcset} sizes={PROJECT_SIZES} />
+      )}
+      <img
+        src={image}
+        alt={alt}
+        width="800"
+        height="600"
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchpriority={priority ? 'high' : 'auto'}
+        sizes={PROJECT_SIZES}
+      />
+    </picture>
+  </div>
+  <div class="body">
+    <h3>{title}</h3>
+    <p>{description}</p>
+    <div class="card-meta">
+      <span class="tag-line">{displayTags}</span>
+      {location && <span class="card-loc">{location}</span>}
+    </div>
+  </div>
+</a>

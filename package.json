@@ -1,0 +1,15 @@
+{
+  "name": "badsha-portfolio",
+  "type": "module",
+  "version": "3.7.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "optimize-images": "node scripts/optimize-images.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^5.1.1"
+  }
+}

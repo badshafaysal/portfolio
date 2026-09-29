@@ -1,0 +1,214 @@
+# Decap CMS — Browser admin for adding / editing projects
+# After deploy, open: https://YOUR-SITE.pages.dev/admin/
+
+# ← CHANGE the repo line to your real GitHub username/repo
+backend:
+  name: github
+  repo: YOUR_GITHUB_USERNAME/badsha-portfolio
+  branch: main
+  # Cloudflare Pages has no built-in GitHub OAuth. Deploy a free OAuth proxy
+  # (e.g. a Cloudflare Worker) and put its URL here, or login will fail.
+  base_url: https://YOUR-OAUTH-PROXY.workers.dev
+
+local_backend: true   # `npx decap-server` for offline testing
+site_url: https://badshafaysal.pages.dev
+display_url: https://badshafaysal.pages.dev
+
+media_folder: public/images
+public_folder: /images
+
+collections:
+  - name: projects
+    label: Projects
+    label_singular: Project
+    folder: src/content/projects
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: "Title", name: "title", widget: "string", required: true }
+      - { label: "Short description", name: "description", widget: "text", required: true, hint: "Shown on homepage cards" }
+      - { label: "Summary", name: "summary", widget: "text", required: false, hint: "Longer overview on project page" }
+      - label: "Categories"
+        name: "category"
+        widget: "select"
+        multiple: true
+        options:
+          - { label: "Industrial", value: "industrial" }
+          - { label: "Portal / PEB", value: "portal" }
+          - { label: "Multi-storey", value: "multistorey" }
+          - { label: "Retrofitting / As-Built", value: "retrofit" }
+        required: true
+      - { label: "Tags (display text)", name: "tags", widget: "string", required: false, hint: "e.g. Industrial · Portal Frame" }
+      - { label: "Cover image", name: "image", widget: "image", required: true }
+      - label: "Gallery photos"
+        name: "gallery"
+        widget: "list"
+        required: false
+        field: { label: "Photo", name: "image", widget: "image" }
+        hint: "Extra photos for the project page gallery"
+      - { label: "Location", name: "location", widget: "string", required: false, hint: "e.g. Gazipur, Bangladesh" }
+      - { label: "Client", name: "client", widget: "string", required: false }
+      - { label: "Year", name: "year", widget: "string", required: false, hint: "e.g. 2024" }
+      - { label: "Scope", name: "scope", widget: "string", required: false, hint: "e.g. Tekla model + shop drawings" }
+      - { label: "Your role", name: "role", widget: "string", required: false, hint: "e.g. Lead detailer" }
+      - { label: "Software used", name: "software", widget: "string", required: false, hint: "e.g. Tekla Structures, AutoCAD" }
+      - { label: "Deliverables", name: "deliverables", widget: "string", required: false, hint: "e.g. Shop drawings, erection plan, BOM" }
+      - { label: "Size", name: "size", widget: "string", required: false, hint: "e.g. 320 tonnes or 12,000 sqft" }
+      - { label: "Duration", name: "duration", widget: "string", required: false, hint: "e.g. 6 weeks" }
+      - { label: "Challenge", name: "challenge", widget: "text", required: false, hint: "One or two sentences" }
+      - { label: "Solution", name: "solution", widget: "text", required: false, hint: "One or two sentences" }
+      - { label: "Result", name: "result", widget: "text", required: false, hint: "One or two sentences" }
+      - label: "Links (previous / related work)"
+        name: "links"
+        widget: "list"
+        required: false
+        summary: "{{fields.label}}"
+        hint: "Client site, earlier phase of the same project, a video, a Tekla model viewer…"
+        fields:
+          - { label: "Label", name: "label", widget: "string" }
+          - { label: "URL", name: "url", widget: "string", hint: "Full link starting with https://" }
+      - { label: "Sample drawing sheet (PDF)", name: "sample", widget: "file", required: false, hint: "Blur client names before uploading" }
+      - { label: "Featured", name: "featured", widget: "boolean", default: false, hint: "Shows a Featured badge on the project card" }
+      - { label: "Order (smaller = higher)", name: "order", widget: "number", default: 99, value_type: "int" }
+      - { label: "Draft (hide from site)", name: "draft", widget: "boolean", default: false }
+      - { label: "Full notes", name: "body", widget: "markdown", required: false, hint: "Detailed notes shown on project page" }
+
+  - name: settings
+    label: Site content
+    files:
+      - name: site
+        label: Site settings
+        file: src/data/site.json
+        fields:
+          - { label: "Career start year", name: "startYear", widget: "number", value_type: "int", hint: "Years of experience on the site are counted from June of this year" }
+          - { label: "Years override (optional)", name: "yearsOverride", widget: "string", required: false, hint: "e.g. 9+ . Leave empty to calculate automatically" }
+          - label: "Availability badge"
+            name: "availability"
+            widget: "object"
+            fields:
+              - { label: "Show", name: "show", widget: "boolean", default: true }
+              - { label: "Text", name: "text", widget: "string" }
+          - { label: "WhatsApp number", name: "whatsapp", widget: "string", hint: "Digits only with country code, e.g. 8801745459928" }
+          - { label: "Email", name: "email", widget: "string" }
+          - { label: "LinkedIn URL", name: "linkedin", widget: "string" }
+          - { label: "Public location", name: "publicLocation", widget: "string", hint: "Shown under the map. Use the area, not a street address" }
+          - { label: "How I work / pricing note", name: "engagementNote", widget: "text", required: false }
+          - { label: "Cloudflare Web Analytics token", name: "cloudflareAnalyticsToken", widget: "string", required: false, hint: "Optional. Cookie-free visitor stats. Leave empty to turn off" }
+
+      - name: services
+        label: Services
+        file: src/data/services.json
+        fields:
+          - label: Services
+            name: items
+            widget: list
+            summary: "{{fields.title}}"
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Description", name: "text", widget: "text" }
+
+      - name: experience
+        label: Experience
+        file: src/data/experience.json
+        fields:
+          - label: Jobs
+            name: items
+            widget: list
+            summary: "{{fields.role}} — {{fields.company}}"
+            fields:
+              - { label: "Role", name: "role", widget: "string" }
+              - { label: "Company", name: "company", widget: "string" }
+              - { label: "Location", name: "location", widget: "string" }
+              - { label: "Period", name: "period", widget: "string", hint: "e.g. June 2017 – Present" }
+              - label: "Bullet points"
+                name: "points"
+                widget: "list"
+                field: { label: "Point", name: "point", widget: "string" }
+
+      - name: education
+        label: Education & training
+        file: src/data/education.json
+        fields:
+          - label: Degrees
+            name: degrees
+            widget: list
+            summary: "{{fields.title}}"
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "School", name: "school", widget: "string" }
+              - { label: "Year", name: "year", widget: "string" }
+              - { label: "Note (e.g. CGPA)", name: "note", widget: "string", required: false }
+          - label: Training & certificates
+            name: training
+            widget: list
+            summary: "{{fields.title}}"
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Organisation", name: "org", widget: "string" }
+              - { label: "Year", name: "year", widget: "string" }
+
+      - name: skills
+        label: Skills
+        file: src/data/skills.json
+        fields:
+          - label: Skill groups
+            name: groups
+            widget: list
+            summary: "{{fields.name}}"
+            fields:
+              - { label: "Group name", name: "name", widget: "string" }
+              - label: "Items"
+                name: "items"
+                widget: "list"
+                field: { label: "Item", name: "item", widget: "string" }
+          - { label: "Languages", name: "languages", widget: "string", required: false }
+
+      - name: clients
+        label: Clients strip
+        file: src/data/clients.json
+        fields:
+          - { label: "Show strip", name: "show", widget: "boolean", default: true, hint: "Only list clients who have agreed to be named" }
+          - label: "Client names"
+            name: "items"
+            widget: "list"
+            field: { label: "Name", name: "name", widget: "string" }
+
+      - name: faq
+        label: FAQ
+        file: src/data/faq.json
+        fields:
+          - label: Questions
+            name: items
+            widget: list
+            summary: "{{fields.q}}"
+            fields:
+              - { label: "Question", name: "q", widget: "string" }
+              - { label: "Answer", name: "a", widget: "text" }
+
+      - name: compare
+        label: Model → drawing comparison
+        file: src/data/compare.json
+        fields:
+          - { label: "Show on site", name: "enabled", widget: "boolean", default: false, hint: "Turn on after uploading both images" }
+          - { label: "Heading", name: "title", widget: "string" }
+          - { label: "Caption", name: "caption", widget: "string" }
+          - { label: "First image (e.g. Tekla model)", name: "before", widget: "image", required: false }
+          - { label: "First image label", name: "beforeLabel", widget: "string" }
+          - { label: "Second image (e.g. shop drawing)", name: "after", widget: "image", required: false }
+          - { label: "Second image label", name: "afterLabel", widget: "string" }
+
+      - name: testimonials
+        label: Client testimonials
+        file: src/data/testimonials.json
+        fields:
+          - label: Testimonials
+            name: items
+            widget: list
+            summary: "{{fields.name}}"
+            hint: "Section stays hidden until you add at least one real testimonial"
+            fields:
+              - { label: "Quote", name: "quote", widget: "text" }
+              - { label: "Name", name: "name", widget: "string" }
+              - { label: "Role / company", name: "role", widget: "string", required: false }

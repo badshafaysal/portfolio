@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "title": "Tekla 3D Modelling & Coordination",
+      "text": "Accurate structural models for industrial, portal and multi-storey steel, coordinated with other disciplines and existing structures."
+    },
+    {
+      "title": "Shop Drawings",
+      "text": "Fabrication drawings with clear marks, dimensions, welds and bolts so the shop can work without guesswork."
+    },
+    {
+      "title": "Erection Plans",
+      "text": "Sequenced erection drawings that help site teams place members safely and efficiently."
+    },
+    {
+      "title": "BOM & Material Lists",
+      "text": "Bills of materials and cutting lists aligned with the model and drawings, to keep material waste down."
+    },
+    {
+      "title": "As-Built & Retrofitting",
+      "text": "As-built documentation and retrofitting drawings for existing RCC and steel structures."
+    },
+    {
+      "title": "RCC & Architectural Drawings",
+      "text": "Architectural and structural drawings for RCC and steel buildings in AutoCAD, with SketchUp 3D views when a visual is needed."
+    },
+    {
+      "title": "ETP / WTP Structural Drawings",
+      "text": "Structural drawings for Effluent Treatment Plants and Water Treatment Plants."
+    },
+    {
+      "title": "Site Inspection & Progress Reports",
+      "text": "Site checks of ongoing work against approved drawings, with progress reports. Experience across 100+ industrial and residential sites."
+    },
+    {
+      "title": "Safety & Compliance Assessment",
+      "text": "Project assessment aligned with Accord on Fire and Building Safety and Alliance for Bangladesh Worker Safety."
+    }
+  ]
+}
